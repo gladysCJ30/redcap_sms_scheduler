@@ -10,7 +10,7 @@ options("stringsAsFactors" = FALSE)
 values <<- reactiveValues(status = "Send a message", twilio_phone = "7866193595", mydb = NULL)
 values$my_table <<- data.frame(stringsAsFactors = FALSE)
 values$get_participants <<- 0
-time_range <<- c(strptime("09:00 AM", "%I:%M %p"), strptime("02:00 PM", "%I:%M %p"))
+time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="EST"), strptime("02:00 PM", "%I:%M %p", tz="EST"))
 
 # Anything that calls autoInvalidate will automatically invalidate
 # every 2 seconds.
@@ -56,9 +56,9 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
           quantity = 0,
           frequency = 30,
           days = "",
-          time_start = format.POSIXct(as.POSIXct(time_range[1]), "%I:%M %p", tz = "EST"),
-          time_end = format.POSIXct(as.POSIXct(time_range[2]), "%I:%M %p", tz = "EST"),
-          scheduled_sms = as.POSIXlt(Sys.time(), tz = "EST"),
+          time_start = as.POSIXct(time_range[1]),
+          time_end = as.POSIXct(time_range[2]),
+          scheduled_sms = as.POSIXlt(Sys.time(), tz = "UTC"),
           sms_body = participant_list[i,]$survey_link,
           stringsAsFactors = FALSE
         )
@@ -86,8 +86,8 @@ shinyServer(function(input, output) {
       values$my_table[values$my_table$phone == input$my_number,]$email <<- input$email
       values$my_table[values$my_table$phone == input$my_number,]$quantity <<- input$sms_quantity
       values$my_table[values$my_table$phone == input$my_number,]$frequency <<- input$sms_frequency
-      values$my_table[values$my_table$phone == input$my_number,]$time_start <<- format.POSIXct(as.POSIXct(time_range[1]), "%I:%M %p", tz = "EST")
-      values$my_table[values$my_table$phone == input$my_number,]$time_end <<- format.POSIXct(as.POSIXct(time_range[2]), "%I:%M %p", tz = "EST")
+      values$my_table[values$my_table$phone == input$my_number,]$time_start <<- as.POSIXct(time_range[1], tz="UTC")
+      values$my_table[values$my_table$phone == input$my_number,]$time_end <<- as.POSIXct(time_range[2], tz="UTC")
       values$my_table[values$my_table$phone == input$my_number,]$days <<- toString(input$weekdays_input)
       values$my_table[values$my_table$phone == input$my_number,] <<- GetNextScheduleTime(values$my_table, rownames(values$my_table[values$my_table$phone == input$my_number,])[1])
       #values$my_table[values$my_table$phone == input$my_number,]$sms_body <- input$sms_body
@@ -98,8 +98,8 @@ shinyServer(function(input, output) {
         values$my_table[values$my_table$email == input$email,]$quantity <<- input$sms_quantity
         values$my_table[values$my_table$email == input$email,]$frequency <<- input$sms_frequency
         values$my_table[values$my_table$email == input$email,]$phone <<- input$my_number
-        values$my_table[values$my_table$email == input$email,]$time_start <<- format.POSIXct(as.POSIXct(time_range[1]), "%I:%M %p", tz = "EST")
-        values$my_table[values$my_table$email == input$email,]$time_end <<- format.POSIXct(as.POSIXct(time_range[2]), "%I:%M %p", tz = "EST")
+        values$my_table[values$my_table$email == input$email,]$time_start <<- as.POSIXct(time_range[1], tz="UTC")
+        values$my_table[values$my_table$email == input$email,]$time_end <<- as.POSIXct(time_range[2], tz="UTC")
         values$my_table[values$my_table$email == input$email,]$days <<- toString(input$weekdays_input)
         values$my_table[values$my_table$email == input$email,] <<- GetNextScheduleTime(values$my_table, rownames(values$my_table[values$my_table$email == input$email,])[1])
       }
@@ -108,8 +108,11 @@ shinyServer(function(input, output) {
 
   output$my_table <- DT::renderDataTable({
     if(nrow(values$my_table) > 0) {
+      print(values$my_table)
       datatable(values$my_table %>%
         mutate(
+          time_start = format.POSIXct(time_start, "%I:%M %p", tz="EST"),
+          time_end = format.POSIXct(time_end, "%I:%M %p", tz="EST"),
           scheduled_sms = format(scheduled_sms, "%a %b %d %Y %I:%M %p", tz = "EST"),
           frequency = paste0(as.character(frequency), " minutes")
         ), rownames = F)

@@ -70,6 +70,7 @@ api_token <- "F66E35FDC22C3BE97BD3C5FCE0F5201E" #CCF Programs Database
 #setwd("D:/CCF BI Projects/SSIS Projects/SSIS - ETL Clinic DW Project")
 
 #file_name <- paste(getwd(), paste("ccf_programs_",gsub("[[:punct:][:space:]]","",Sys.time()),".csv",sep=""), sep="/")
+setwd("~/")
 file_name <- paste(getwd(), paste("ccf_programs_participant_list.csv",sep=""), sep="/")
 
 # Function calls

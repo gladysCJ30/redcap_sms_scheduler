@@ -44,7 +44,7 @@ shinyUI(fluidPage(
       sliderInput(
         "time_range",
         "Time Range",
-        value = c(strptime("09:00 AM", "%I:%M %p"), strptime("02:00 PM", "%I:%M %p")),
+        value = c(strptime("09:00 AM", "%I:%M %p", tz = "EST"), strptime("02:00 PM", "%I:%M %p", tz="EST")),
         min = strptime("06:00 AM", "%I:%M %p", tz = "EST"),
         max = strptime("09:00 PM", "%I:%M %p", tz = "EST"),
         dragRange = T,
