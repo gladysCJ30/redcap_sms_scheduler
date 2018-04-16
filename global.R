@@ -1,5 +1,7 @@
 #These are global functions
 
+options("stringsAsFactors" = FALSE)
+
 source("configuration.R")
 
 ##
@@ -9,11 +11,8 @@ source("configuration.R")
 GetNextScheduleTime <- function(my_table, recipient) {
   #If the next message wont fit within the time range today OR today is not on the list of weekdays to survey:
   if(
-    format(my_table[recipient,]$scheduled_sms + (my_table[recipient,]$frequency * 60), "%I:%M %p", tz = "EST")
-    > my_table[recipient,]$time_end
-    ||
-    length(grep(format(my_table[recipient,]$scheduled_sms + (my_table[recipient,]$frequency * 60), "%A", tz = "EST"), my_table[recipient,]$days)) == 0
-  ) {
+    my_table[recipient,]$scheduled_sms + (my_table[recipient,]$frequency * 60) > my_table[recipient,]$time_end #|| length(grep(format(my_table[recipient,]$scheduled_sms + (my_table[recipient,]$frequency * 60), "%A"), my_table[recipient,]$days)) == 0 
+    ) {
 
     #Find the next weekday that a message should be sent
     for(i in 1:7) {

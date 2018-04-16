@@ -5,8 +5,6 @@ library(DT)
 library(dplyr)
 library(RCurl)
 
-options("stringsAsFactors" = FALSE)
-
 values <<- reactiveValues(status = "Send a message", twilio_phone = "7866193595", mydb = NULL)
 values$my_table <<- data.frame(stringsAsFactors = FALSE)
 values$get_participants <<- 0
@@ -26,8 +24,10 @@ observeEvent(autoInvalidate(), {
       values$my_table[recipient,]$quantity <<- values$my_table[recipient,]$quantity - 1
       values$my_table[recipient,] <<- GetNextScheduleTime(values$my_table, recipient)
 
-      tw_send_message(from = values$twilio_phone, to = values$my_table[recipient,]$phone,
-                      body = as.character(values$my_table[recipient,]$sms_body))
+      
+      print("SENDING MESSAGE")
+      #tw_send_message(from = values$twilio_phone, to = values$my_table[recipient,]$phone,
+      #                body = as.character(values$my_table[recipient,]$sms_body))
     }
   }
 

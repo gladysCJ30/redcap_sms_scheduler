@@ -13,7 +13,9 @@ shinyUI(fluidPage(
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
-      #actionButton("debugging", "Debug"),
+      
+      actionButton("debugging", "Debug"),
+      
       splitLayout(
         cellWidths = c("30%", "70%"),
         p("Recipient and Message", align = "center"),

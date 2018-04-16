@@ -76,7 +76,7 @@ file_name <- paste(getwd(), paste("ccf_programs_participant_list.csv",sep=""), s
 # Function calls
 redcapExportRecords(file_name,api_url,api_token,'csv','flat')
 
-participant_list <<- read.csv("ccf_programs_participant_list.csv")
+participant_list <<- read.csv("ccf_programs_participant_list.csv", stringsAsFactors = F)
 
 participant_list <<- participant_list[!is.na(participant_list$phone) & !is.na(participant_list$survey_link),]
 
