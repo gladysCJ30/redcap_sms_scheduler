@@ -10,14 +10,19 @@ source("configuration.R")
 ##
 GetNextScheduleTime <- function(my_table, recipient) {
   #If the next message wont fit within the time range today OR today is not on the list of weekdays to survey:
-  if(
-    my_table[recipient,]$scheduled_sms + (my_table[recipient,]$frequency * 60) > my_table[recipient,]$time_end #|| length(grep(format(my_table[recipient,]$scheduled_sms + (my_table[recipient,]$frequency * 60), "%A"), my_table[recipient,]$days)) == 0 
-    ) {
+  
+  time_difference <- as.difftime(c(format(my_table[recipient,]$scheduled_sms, "%I:%M %p", tz = "America/New_York"), format(my_table[recipient,]$time_end, "%I:%M %p", tz = "America/New_York")), format = "%I:%M %p", units = "secs")
+  scheduled_time <- time_difference[[1]] + (my_table[recipient,]$frequency * 60)
+  ending_time <- time_difference[[2]]
+  
+  
+  if( scheduled_time > ending_time || length(grep(format(my_table[recipient,]$scheduled_sms + (my_table[recipient,]$frequency * 60), "%A", tz = "America/New_York"), my_table[recipient,]$days)) == 0 ) {
 
     #Find the next weekday that a message should be sent
+    #86400 is the number of seconds in a day
     for(i in 1:7) {
-      if(length(grep(format(my_table[recipient,]$scheduled_sms + (86400 * i), "%A", tz = "EST"), my_table[recipient,]$days)) == 1) {
-        my_table[recipient,]$scheduled_sms <- strptime(paste0(as.character(format(my_table[recipient,]$scheduled_sms + (86400 * i), "%a %b %d %Y ", tz = "EST")), my_table[recipient,]$time_start), "%a %b %d %Y %I:%M %p", tz = "EST")
+      if(length(grep(format(my_table[recipient,]$scheduled_sms + (86400 * i), "%A", tz = "America/New_York"), my_table[recipient,]$days)) == 1) {
+        my_table[recipient,]$scheduled_sms <- strptime(paste0(as.character(format(my_table[recipient,]$scheduled_sms + (86400 * i), "%a %b %d %Y ", tz = "America/New_York")), format.POSIXct(my_table[recipient,]$time_start, "%I:%M %p", tz = "America/New_York")), "%a %b %d %Y %I:%M %p")
         break
       }
 
@@ -28,7 +33,7 @@ GetNextScheduleTime <- function(my_table, recipient) {
     }
   }
   else {
-    my_table[recipient,]$scheduled_sms <- as.POSIXct(Sys.time() + (my_table[recipient,]$frequency * 60), tz = "EST")
+    my_table[recipient,]$scheduled_sms <- as.POSIXct(Sys.time() + (my_table[recipient,]$frequency * 60))
   }
 
   return(my_table[recipient,])
