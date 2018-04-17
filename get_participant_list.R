@@ -66,11 +66,11 @@ api_url <- 'https://redcap.fiu.edu/api/'
 api_token <- "F66E35FDC22C3BE97BD3C5FCE0F5201E" #CCF Programs Database
 
 # Set the working directory
-#setwd("D:/dev/sms_demo/")
+setwd("D:/dev/CCF/redcap_sms_scheduler/")
 #setwd("D:/CCF BI Projects/SSIS Projects/SSIS - ETL Clinic DW Project")
 
 #file_name <- paste(getwd(), paste("ccf_programs_",gsub("[[:punct:][:space:]]","",Sys.time()),".csv",sep=""), sep="/")
-setwd("~/")
+#setwd("~/")
 file_name <- paste(getwd(), paste("ccf_programs_participant_list.csv",sep=""), sep="/")
 
 # Function calls
