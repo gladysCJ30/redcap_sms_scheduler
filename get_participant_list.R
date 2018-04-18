@@ -18,6 +18,9 @@
 #
 ###############################################################################
 
+instruments <- c("lscb", "bcb", "ccb")
+events <- c("week_1_arm_1", "week_2_arm_1", "week_3_arm_1")
+
 # Load libraries
 library(RCurl)
 
@@ -32,41 +35,69 @@ library(RCurl)
 #   - type:         flat [default] - output as one record per row
 #
 
-redcapExportRecords <- function(file_name, api_url, api_token, format, type) {
-
+redcapExportRecords <- function(api_url, api_token, instrument, event) {
+  
   if (!require('RCurl')) {
     stop('RCurl is not installed')
   }
-
+  
   mydata <- read.csv(
-              text=postForm(
-                          # Redcap API required
-                            uri=api_url
-                          , token=api_token
-                          , content='participantList'
-                          , format=format
-                          , type=type
-                          , instrument="i1"
-                          # Redcap API optional
-                          , events=NULL
-                          # RCurl options
-                          ,.opts=curlOptions(ssl.verifyhost=2)
-                   )
-              ,stringsAsFactors=FALSE
-              ,na.strings='')
+    text=postForm(
+      # Redcap API required
+      uri=api_url
+      , token=api_token
+      , content='participantList'
+      , format='csv'
+      , type='flat'
+      , instrument=instrument
+      # Redcap API optional
+      , event=event#NULL
+      # RCurl options
+      ,.opts=curlOptions(ssl.verifyhost=2)
+    )
+    ,stringsAsFactors=FALSE
+    ,na.strings='')
+  
+  print(mydata)
+  print("")
+  return(mydata)
+  #write.csv(mydata, file = file_name)
+  
+}
 
-  write.csv(mydata, file = file_name)
-
+redcapExportReport <- function(api_url, api_token) {
+  
+  if (!require('RCurl')) {
+    stop('RCurl is not installed')
+  }
+  
+  mydata <- read.csv(
+    text=postForm(
+      # Redcap API required
+      uri=api_url
+      , token=api_token
+      , content='report'
+      , format='csv'
+      , report_id= 4
+      # RCurl options
+      ,.opts=curlOptions(ssl.verifyhost=2)
+    )
+    ,stringsAsFactors=FALSE
+    ,na.strings='')
+  
+  print(mydata)
+  #write.csv(mydata, file = file_name)
+  
 }
 
 # Config: URL
-api_url <- 'https://redcap.fiu.edu/api/'
+api_url <- 'https://redcapdev.fiu.edu/api/'
 
 # Config: Tokens for each database
-api_token <- "F66E35FDC22C3BE97BD3C5FCE0F5201E" #CCF Programs Database
+api_token <- "09C6537FF5EAFE92BD74E1AA1B9BEF67"#"F66E35FDC22C3BE97BD3C5FCE0F5201E" #CCF Programs Database
 
 # Set the working directory
-setwd("D:/dev/CCF/redcap_sms_scheduler/")
+#setwd("D:/dev/CCF/redcap_sms_scheduler/")
 #setwd("D:/CCF BI Projects/SSIS Projects/SSIS - ETL Clinic DW Project")
 
 #file_name <- paste(getwd(), paste("ccf_programs_",gsub("[[:punct:][:space:]]","",Sys.time()),".csv",sep=""), sep="/")
@@ -74,7 +105,20 @@ setwd("D:/dev/CCF/redcap_sms_scheduler/")
 file_name <- paste(getwd(), paste("ccf_programs_participant_list.csv",sep=""), sep="/")
 
 # Function calls
-redcapExportRecords(file_name,api_url,api_token,'csv','flat')
+#redcapExportRecords(file_name,api_url,api_token,'csv','flat')
+
+redcapExportReport(api_url,api_token)
+
+chicken <<- data.frame()
+
+lapply(instruments, function(x) {
+  lapply(events, function(y) {
+    #print(x)
+    #print(y)
+    #print("")
+    chicken <<- rbind(chicken, redcapExportRecords(api_url,api_token,x,y))
+  })
+})
 
 participant_list <<- read.csv("ccf_programs_participant_list.csv", stringsAsFactors = F)
 
