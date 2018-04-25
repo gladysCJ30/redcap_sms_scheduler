@@ -49,8 +49,8 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
   bcb_records <<- redcapExportRecords(api_url, api_token, "bcb_parent", paste0("week_", week_number, "_arm_1"))
   ccb_records <<- redcapExportRecords(api_url, api_token, "ccb_parent", paste0("week_", week_number, "_arm_1"))
 
-  for(i in rownames(randomization)) {
-    this_phone <- contact_list[contact_list$record == randomization[i,]$record_id,]
+  for(i in rownames(contact_list)) {
+    this_phone <- contact_list$phone
     this_phone <- gsub("\\(", "", this_phone)
     this_phone <- gsub(")", "", this_phone)
     this_phone <- gsub("-", "", this_phone)
