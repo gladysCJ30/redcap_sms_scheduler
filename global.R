@@ -38,3 +38,21 @@ GetNextScheduleTime <- function(my_table, recipient) {
 
   return(my_table[recipient,])
 }
+
+GetWeekNumber <- function(date) {
+  if(is.na(strptime(date, format = "%Y-%m-%d"))) {
+    date <- "2017-01-01"
+  }
+  
+  return(
+    floor(
+      length(
+        seq(
+          from=strptime("2017-01-01", format = "%Y-%m-%d"), 
+          to=strptime(date, format = "%Y-%m-%d"), 
+          by="days"
+        )
+      )/7
+    )
+  )
+}

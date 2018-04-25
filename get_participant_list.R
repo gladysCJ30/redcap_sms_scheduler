@@ -18,7 +18,7 @@
 #
 ###############################################################################
 
-instruments <- c("lscb", "bcb", "ccb")
+instruments <- c("lscb_parent", "bcb_parent", "ccb_parent")
 events <- c("week_1_arm_1", "week_2_arm_1", "week_3_arm_1")
 
 # Load libraries
@@ -65,28 +65,30 @@ redcapExportRecords <- function(api_url, api_token, instrument, event) {
   
 }
 
-redcapExportReport <- function(api_url, api_token) {
+redcapExportReport <- function(api_url, api_token, file_name) {
   
   if (!require('RCurl')) {
     stop('RCurl is not installed')
   }
   
-  mydata <- read.csv(
-    text=postForm(
-      # Redcap API required
-      uri=api_url
-      , token=api_token
-      , content='report'
-      , format='csv'
-      , report_id= 4
-      # RCurl options
-      ,.opts=curlOptions(ssl.verifyhost=2)
-    )
-    ,stringsAsFactors=FALSE
-    ,na.strings='')
+  text <- postForm(
+    # Redcap API required
+    uri=api_url
+    , token=api_token
+    , content='report'
+    , format='csv'
+    , report_id= 4
+    # RCurl options
+    ,.opts=curlOptions(ssl.verifyhost=2)
+  )
   
-  print(mydata)
-  #write.csv(mydata, file = file_name)
+  mydata <- read.csv(
+    text = text,
+    stringsAsFactors=FALSE,
+    na.strings=''
+  )
+
+  write.csv(mydata, file = file_name)
   
 }
 
@@ -107,22 +109,17 @@ file_name <- paste(getwd(), paste("ccf_programs_participant_list.csv",sep=""), s
 # Function calls
 #redcapExportRecords(file_name,api_url,api_token,'csv','flat')
 
-redcapExportReport(api_url,api_token)
+redcapExportReport(api_url,api_token, paste(getwd(), "phone_number_list.csv", sep="/"))
 
-chicken <<- data.frame()
-
-lapply(instruments, function(x) {
-  lapply(events, function(y) {
-    #print(x)
-    #print(y)
-    #print("")
-    chicken <<- rbind(chicken, redcapExportRecords(api_url,api_token,x,y))
-  })
-})
+contact_list <<- read.csv("phone_number_list.csv", stringsAsFactors = F)
 
 participant_list <<- read.csv("ccf_programs_participant_list.csv", stringsAsFactors = F)
 
 participant_list <<- participant_list[!is.na(participant_list$phone) & !is.na(participant_list$survey_link),]
 
-
+randomization <<- read.csv(
+  file = "random.csv",
+  stringsAsFactors=FALSE,
+  na.strings=''
+)
 

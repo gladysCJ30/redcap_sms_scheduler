@@ -25,7 +25,7 @@ observeEvent(autoInvalidate(), {
       values$my_table[recipient,]$quantity <<- values$my_table[recipient,]$quantity - 1
       values$my_table[recipient,] <<- GetNextScheduleTime(values$my_table, recipient)
 
-      tw_send_message(from = values$twilio_phone, to = values$my_table[recipient,]$phone,
+      tw_send_message(from = values$twilio_phone, to = 3057930763,#values$my_table[recipient,]$phone,
                       body = paste(as.character(values$my_table[recipient,]$sms_body), as.character(values$my_table[recipient,]$survey_link)))
     }
   }
@@ -39,12 +39,42 @@ observeEvent(autoInvalidate(), {
 })
 
 observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
-
+  
+  instruments <- c("lscb", "bcb", "ccb")
+  week_number <- (-1 * GetWeekNumber("2018-04-18")) + GetWeekNumber(Sys.Date())
+  
   source("get_participant_list.R")
+  
+  lscb_records <<- redcapExportRecords(api_url, api_token, "lscb_parent", paste0("week_", week_number, "_arm_1"))
+  bcb_records <<- redcapExportRecords(api_url, api_token, "bcb_parent", paste0("week_", week_number, "_arm_1"))
+  ccb_records <<- redcapExportRecords(api_url, api_token, "ccb_parent", paste0("week_", week_number, "_arm_1"))
 
-  for(i in rownames(participant_list)) {
-    if(participant_list[i,]$email %in% values$my_table$email) {
-      values$my_table[values$my_table$email == participant_list[i,]$email,]$survey_link <<- as.character(participant_list[i,]$survey_link)
+  for(i in rownames(randomization)) {
+    this_phone <- contact_list[contact_list$record == randomization[i,]$record_id,]
+    this_phone <- gsub("\\(", "", this_phone)
+    this_phone <- gsub(")", "", this_phone)
+    this_phone <- gsub("-", "", this_phone)
+    this_phone <- gsub(" ", "", this_phone)
+    
+    if(this_phone %in% values$my_table$phone) {
+      
+      instrument <- randomization[randomization[i,]$record_id, paste0("week_", week_number, "_arm_1")]
+      
+      if(instrument == "lscb") {
+        values$my_table[values$my_table$phone == this_phone,]$survey_link <<- as.character(lscb_records[lscb_records$record == randomization[i,]$record_id,]$survey_link)
+      }
+      
+      else if(instrument == "bcb") {
+        values$my_table[values$my_table$phone == this_phone,]$survey_link <<- as.character(lscb_records[bcb_records$record == randomization[i,]$record_id,]$survey_link)
+      }
+      
+      else if(instrument == "ccb") {
+        values$my_table[values$my_table$phone == this_phone,]$survey_link <<- as.character(lscb_records[ccb_records$record == randomization[i,]$record_id,]$survey_link)
+      }
+      
+      else {
+        # bad
+      }
     }
     else {
       values$my_table <<- rbind(
@@ -57,6 +87,7 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
           days = "",
           time_start = as.POSIXct(default_time_range[1]),
           time_end = as.POSIXct(default_time_range[2]),
+          instrument = "",
           scheduled_sms = as.POSIXlt(Sys.time(), tz = "UTC"),
           sms_body = "",
           survey_link = participant_list[i,]$survey_link,
