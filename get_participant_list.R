@@ -58,8 +58,6 @@ redcapExportRecords <- function(api_url, api_token, instrument, event) {
     ,stringsAsFactors=FALSE
     ,na.strings='')
   
-  print(mydata)
-  print("")
   return(mydata)
   #write.csv(mydata, file = file_name)
   
@@ -113,9 +111,9 @@ redcapExportReport(api_url,api_token, paste(getwd(), "phone_number_list.csv", se
 
 contact_list <<- read.csv("phone_number_list.csv", stringsAsFactors = F)
 
-participant_list <<- read.csv("ccf_programs_participant_list.csv", stringsAsFactors = F)
+#participant_list <<- read.csv("ccf_programs_participant_list.csv", stringsAsFactors = F)
 
-participant_list <<- participant_list[!is.na(participant_list$phone) & !is.na(participant_list$survey_link),]
+#participant_list <<- participant_list[!is.na(participant_list$phone) & !is.na(participant_list$survey_link),]
 
 randomization <<- read.csv(
   file = "random.csv",

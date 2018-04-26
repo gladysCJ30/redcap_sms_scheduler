@@ -40,7 +40,6 @@ observeEvent(autoInvalidate(), {
 
 observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
   
-  instruments <- c("lscb", "bcb", "ccb")
   week_number <- (-1 * GetWeekNumber("2018-04-18")) + GetWeekNumber(Sys.Date())
   
   source("get_participant_list.R")
@@ -50,56 +49,59 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
   ccb_records <<- redcapExportRecords(api_url, api_token, "ccb_parent", paste0("week_", week_number, "_arm_1"))
 
   for(i in rownames(contact_list)) {
-    this_phone <- contact_list$phone
-    this_phone <- gsub("\\(", "", this_phone)
-    this_phone <- gsub(")", "", this_phone)
-    this_phone <- gsub("-", "", this_phone)
-    this_phone <- gsub(" ", "", this_phone)
     
-    if(this_phone %in% values$my_table$phone) {
+    record_id <- contact_list[i,]$record_id
+    
+    if(tail(rownames(contact_list[contact_list$record_id == record_id,]), 1) == i) {
+    
+      this_phone <- head(contact_list[contact_list$record_id == record_id,], 1)$phone
+      this_phone <- gsub("\\(", "", this_phone)
+      this_phone <- gsub(")", "", this_phone)
+      this_phone <- gsub("-", "", this_phone)
+      this_phone <- gsub(" ", "", this_phone)
+        
+      instrument <- randomization[randomization$record_id == record_id, paste0("week_", week_number, "_arm_1")]
       
-      instrument <- randomization[randomization[i,]$record_id, paste0("week_", week_number, "_arm_1")]
+      instrument_records <- get(paste0(instrument, "_records"))
       
-      if(instrument == "lscb") {
-        values$my_table[values$my_table$phone == this_phone,]$survey_link <<- as.character(lscb_records[lscb_records$record == randomization[i,]$record_id,]$survey_link)
-      }
+      survey_link <- tail(instrument_records[instrument_records$record == record_id,]$survey_link, 1)
       
-      else if(instrument == "bcb") {
-        values$my_table[values$my_table$phone == this_phone,]$survey_link <<- as.character(lscb_records[bcb_records$record == randomization[i,]$record_id,]$survey_link)
-      }
-      
-      else if(instrument == "ccb") {
-        values$my_table[values$my_table$phone == this_phone,]$survey_link <<- as.character(lscb_records[ccb_records$record == randomization[i,]$record_id,]$survey_link)
+      if(this_phone %in% values$my_table$phone) {
+        
+        values$my_table[values$my_table$phone == this_phone,]$survey_link <<- survey_link
+        values$my_table[values$my_table$phone == this_phone,]$instrument <<- instrument
       }
       
       else {
-        # bad
-      }
-    }
-    else {
-      values$my_table <<- rbind(
-        values$my_table,
-        data.frame(
-          email = participant_list[i,]$email,
-          phone = as.numeric(gsub("-", "", participant_list[i,]$phone)),
-          quantity = 0,
-          frequency = 30,
-          days = "",
-          time_start = as.POSIXct(default_time_range[1]),
-          time_end = as.POSIXct(default_time_range[2]),
-          instrument = "",
-          scheduled_sms = as.POSIXlt(Sys.time(), tz = "UTC"),
-          sms_body = "",
-          survey_link = participant_list[i,]$survey_link,
-          stringsAsFactors = FALSE
+        
+        values$my_table <<- rbind(
+          values$my_table,
+          data.frame(
+            email = tail(instrument_records[instrument_records$record == record_id,]$email, 1),
+            phone = this_phone,
+            quantity = 0,
+            frequency = 30,
+            days = "",
+            time_start = as.POSIXct(default_time_range[1]),
+            time_end = as.POSIXct(default_time_range[2]),
+            instrument = "",
+            scheduled_sms = as.POSIXlt(Sys.time(), tz = "UTC"),
+            sms_body = "",
+            survey_link = survey_link,
+            stringsAsFactors = FALSE
+          )
         )
-      )
+      }
     }
   }
 })
 
 
 shinyServer(function(input, output) {
+  
+  observeEvent(input$debugging, {
+    browser()
+  })
 
   observeEvent(input$time_range, {
     time_range <<- input$time_range
