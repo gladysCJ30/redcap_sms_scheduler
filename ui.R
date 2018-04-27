@@ -18,11 +18,9 @@ shinyUI(fluidPage(
       
       splitLayout(
         cellWidths = c("30%", "70%"),
-        p("Recipient and Message", align = "center"),
+        p("Message", align = "center"),
         hr()
       ),
-      textInput("email", "Email Address"),
-      numericInput("my_number", "Enter Phone Number", 0000000000, min = 0000000000, max = 9999999999),
       textInput("sms_body", "Enter Text Message"),
       br(),
       br(),

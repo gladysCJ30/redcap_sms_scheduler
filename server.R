@@ -84,7 +84,7 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
             days = "",
             time_start = as.POSIXct(default_time_range[1]),
             time_end = as.POSIXct(default_time_range[2]),
-            instrument = "",
+            instrument = instrument,
             scheduled_sms = as.POSIXlt(Sys.time(), tz = "UTC"),
             sms_body = "",
             survey_link = survey_link,
@@ -109,32 +109,16 @@ shinyServer(function(input, output) {
 
   observeEvent({
     input$schedule_sms
-  }, ignoreInit = T,
-  {
-    my_phone_number <- input$my_number
+  }, ignoreInit = T, {
 
-    if(input$my_number %in% values$my_table$phone) {
-      values$my_table[values$my_table$phone == input$my_number,]$email <<- input$email
-      values$my_table[values$my_table$phone == input$my_number,]$quantity <<- input$sms_quantity
-      values$my_table[values$my_table$phone == input$my_number,]$frequency <<- input$sms_frequency
-      values$my_table[values$my_table$phone == input$my_number,]$time_start <<- as.POSIXct(time_range[1])
-      values$my_table[values$my_table$phone == input$my_number,]$time_end <<- as.POSIXct(time_range[2])
-      values$my_table[values$my_table$phone == input$my_number,]$days <<- toString(input$weekdays_input)
-      values$my_table[values$my_table$phone == input$my_number,] <<- GetNextScheduleTime(values$my_table, rownames(values$my_table[values$my_table$phone == input$my_number,])[1])
-      values$my_table[values$my_table$phone == input$my_number,]$sms_body <- input$sms_body
-    }
-    else if(input$my_number > 0 && input$my_number <= 9999999999){
-      if(input$email %in% values$my_table$email) {
-        #values$my_table[values$my_table$email == input$email,]$email
-        values$my_table[values$my_table$email == input$email,]$quantity <<- input$sms_quantity
-        values$my_table[values$my_table$email == input$email,]$frequency <<- input$sms_frequency
-        values$my_table[values$my_table$email == input$email,]$phone <<- input$my_number
-        values$my_table[values$my_table$email == input$email,]$time_start <<- as.POSIXct(time_range[1])
-        values$my_table[values$my_table$email == input$email,]$time_end <<- as.POSIXct(time_range[2])
-        values$my_table[values$my_table$email == input$email,]$days <<- toString(input$weekdays_input)
-        values$my_table[values$my_table$email == input$email,] <<- GetNextScheduleTime(values$my_table, rownames(values$my_table[values$my_table$email == input$email,])[1])
-        values$my_table[values$my_table$email == input$email,]$sms_body <- input$sms_body
-      }
+    if(isTruthy(input$my_table_rows_selected)) {
+      values$my_table[input$my_table_rows_selected,]$quantity <<- input$sms_quantity
+      values$my_table[input$my_table_rows_selected,]$frequency <<- input$sms_frequency
+      values$my_table[input$my_table_rows_selected,]$time_start <<- as.POSIXct(time_range[1])
+      values$my_table[input$my_table_rows_selected,]$time_end <<- as.POSIXct(time_range[2])
+      values$my_table[input$my_table_rows_selected,]$days <<- toString(input$weekdays_input)
+      values$my_table[input$my_table_rows_selected,] <<- GetNextScheduleTime(values$my_table, rownames(values$my_table[input$my_table_rows_selected,])[1])
+      values$my_table[input$my_table_rows_selected,]$sms_body <- input$sms_body
     }
   })
 
@@ -146,7 +130,10 @@ shinyServer(function(input, output) {
           time_end = format.POSIXct(time_end, "%I:%M %p", tz="America/New_York"),
           scheduled_sms = format(scheduled_sms, "%a %b %d %Y %I:%M %p", tz = "America/New_York"),
           frequency = paste0(as.character(frequency), " minutes")
-        ), rownames = F)
+        ),
+        rownames = F,
+        selection = "single"
+      )
     }
     else {
       return(data.frame())
