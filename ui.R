@@ -8,7 +8,7 @@ shinyUI(
     shinyjs::useShinyjs(),
     
     # Application title
-    titlePanel("Sending SMS Demo"),
+    titlePanel("SMS Scheduling"),
     
     tags$head(
       tags$style(HTML("hr {border-top: solid #000000; margin-top: 8px;}"))
@@ -16,6 +16,7 @@ shinyUI(
     
     # Sidebar with a slider input for number of bins
     sidebarLayout(
+      
       sidebarPanel(
         
         #actionButton("debugging", "Debug"),
@@ -26,14 +27,7 @@ shinyUI(
             
             br(),
             
-            dateInput("start_date", "Start Date"),
-            
-            numericInput(
-              "week_range",
-              label = "Week Range",
-              value = 1,
-              min = 0
-            )
+            uiOutput("general_ui")
             
           ),
           
@@ -109,8 +103,7 @@ shinyUI(
       ),
       
       mainPanel(
-        DT::dataTableOutput("my_table"),
-        textOutput("test_emoji")
+        DT::dataTableOutput("my_table")
       )
     )
   ))

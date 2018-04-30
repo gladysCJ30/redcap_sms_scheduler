@@ -10,6 +10,8 @@ values$my_table <<- data.frame(stringsAsFactors = FALSE)
 values$get_participants <<- 0
 time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
 default_time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
+start_date <<- Sys.Date()
+week_range <<- 0
 
 # Anything that calls autoInvalidate will automatically invalidate
 # every 2 seconds.
@@ -99,11 +101,44 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
 
 shinyServer(function(input, output) {
   
+  output$general_ui <- renderUI({
+    div(
+      dateInput(
+        "start_date",
+        "Start Date",
+        value = start_date
+      ),
+      
+      numericInput(
+        "week_range",
+        label = "Week Range",
+        value = week_range,
+        min = 0
+      )
+    )
+  })
+  
   observeEvent(input$debugging, {
     browser()
   })
+  
+  observeEvent({
+    input$start_date
+  }, ignoreInit = T, {
+    
+    start_date <<- input$start_date
+  })
+  
+  observeEvent({
+    input$week_range
+  }, ignoreInit = T, {
+    
+    week_range <<- input$week_range
+  })
 
-  observeEvent(input$time_range, {
+  observeEvent({
+    input$time_range
+  }, {
     time_range <<- input$time_range
   })
 
