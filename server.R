@@ -82,10 +82,8 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
             quantity = 0,
             frequency = 30,
             days = "",
-            date_start = format(Sys.time(), "%Y-%m-%d"),
             time_start = as.POSIXct(default_time_range[1]),
             time_end = as.POSIXct(default_time_range[2]),
-            week_range = 0,
             instrument = instrument,
             scheduled_sms = as.POSIXlt(Sys.time(), tz = "UTC"),
             sms_body = "",
@@ -121,17 +119,13 @@ shinyServer(function(input, output) {
       values$my_table[input$my_table_rows_selected,]$days <<- toString(input$weekdays_input)
       values$my_table[input$my_table_rows_selected,] <<- GetNextScheduleTime(values$my_table, rownames(values$my_table[input$my_table_rows_selected,])[1])
       values$my_table[input$my_table_rows_selected,]$sms_body <<- input$sms_body
-      values$my_table[input$my_table_rows_selected,]$week_range <<- input$week_range
-      values$my_table[input$my_table_rows_selected,]$date_start <<- input$date_start
     }
     
     reset("time_range")
-    reset("week_range")
     reset("sms_body")
     reset("sms_quantity")
     reset("sms_frequency")
     reset("weekdays_input")
-    reset("date_start")
   })
 
   output$my_table <- DT::renderDataTable({
