@@ -1,6 +1,6 @@
 #These are global functions
 
-options("stringsAsFactors" = FALSE)
+options("stringsAsFactors" = FALSE, shiny.trace = T)
 
 source("configuration.R")
 

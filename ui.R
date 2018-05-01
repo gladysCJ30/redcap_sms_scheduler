@@ -19,7 +19,7 @@ shinyUI(
       
       sidebarPanel(
         
-        #actionButton("debugging", "Debug"),
+        actionButton("debugging", "Debug"),
         
         tabsetPanel(
           tabPanel(
@@ -61,18 +61,18 @@ shinyUI(
               hr()
             ),
             
-            sliderInput(
-              "time_range",
-              "Time Range",
-              value = c(strptime("09:00 AM", "%I:%M %p", tz = "America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York")),
-              min = strptime("06:00 AM", "%I:%M %p", tz = "America/New_York"),
-              max = strptime("09:00 PM", "%I:%M %p", tz = "America/New_York"),
-              dragRange = T,
-              step = 900,
-              ticks = F,
-              timeFormat = "%I:%M %p",
-              timezone = NULL
-            ),
+            # sliderInput(
+            #   "time_range",
+            #   "Time Range",
+            #   value = c(strptime("09:00 AM", "%I:%M %p", tz = "America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York")),
+            #   min = strptime("06:00 AM", "%I:%M %p", tz = "America/New_York"),
+            #   max = strptime("09:00 PM", "%I:%M %p", tz = "America/New_York"),
+            #   dragRange = T,
+            #   step = 900,
+            #   ticks = F,
+            #   timeFormat = "%I:%M %p",
+            #   timezone = NULL
+            # ),
             
             checkboxGroupInput(
               "weekdays_input",
@@ -87,6 +87,10 @@ shinyUI(
                 "Saturday"
               )
             ),
+            
+            br(),
+            
+            uiOutput("time_ranges"),
             
             hr(),
             br(),
