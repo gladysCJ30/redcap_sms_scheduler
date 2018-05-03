@@ -121,13 +121,13 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
         #   )
         # )
         
-        values$my_table$email[[this_phone]] <<- c(values$my_table[[this_phone]]$email, tail(instrument_records[instrument_records$record == record_id,]$email, 1))
+        values$my_table$email[[this_phone]] <<- tail(instrument_records[instrument_records$record == record_id,]$email, 1)
         values$my_table$phone[[this_phone]] <<- this_phone
         values$my_table$quantity[[this_phone]] <<- 0
         values$my_table$frequency[[this_phone]] <<- 30
         values$my_table$days[[this_phone]] <<- ""
-        values$my_table$time_start[[this_phone]]$time_start_1 <<- as.POSIXct(default_time_range[1])
-        values$my_table$time_end[[this_phone]]$time_end_1 <<- as.POSIXct(default_time_range[2])
+        values$my_table$time_start[[this_phone]]$time_start_1 <<- default_time_range[1]#$time_start_1 <<- as.POSIXct(default_time_range[1])
+        values$my_table$time_end[[this_phone]]$time_end_1 <<- default_time_range[2]
         values$my_table$instrument[[this_phone]] <<- instrument
         values$my_table$scheduled_sms[[this_phone]] <<- as.POSIXlt(Sys.time(), tz = "UTC")
         values$my_table$sms_body[[this_phone]] <<- ""
@@ -161,9 +161,9 @@ shinyServer(function(input, output) {
     
     if(is.null(input$my_table_rows_selected) == F) {
       
-      selected_row <- values$my_table[input$my_table_rows_selected,]
+      selected_phone <- values$my_table$phone[[input$my_table_rows_selected]]
       
-      time_ranges <- c(time_start = selected_row$time_start, time_end = selected_row$time_end)
+      time_ranges <- list(time_start = values$my_table$time_start[[selected_phone]], time_end = values$my_table$time_end[[selected_phone]])
       
       inputTagList <- tagList()
       
@@ -171,7 +171,7 @@ shinyServer(function(input, output) {
         inputTagList <<- tagAppendChild(inputTagList, sliderInput(
           inputId = paste0("time_range_", i),
           label = paste0("Time Range ", i),
-          value = c(as.POSIXct(time_ranges$time_start[[paste0("time_start_", i)]], "%I:%M %p", tz = "America/New_York"), as.POSIXct(time_ranges$time_end[[paste0("time_end_", i)]], "%I:%M %p", tz="America/New_York")),
+          value = c(as.POSIXlt(time_ranges$time_start[[paste0("time_start_", i)]], "%I:%M %p", tz = "America/New_York"), as.POSIXlt(time_ranges$time_end[[paste0("time_end_", i)]], "%I:%M %p", tz="America/New_York")),
           min = strptime("06:00 AM", "%I:%M %p", tz = "America/New_York"),
           max = strptime("09:00 PM", "%I:%M %p", tz = "America/New_York"),
           dragRange = T,
@@ -242,9 +242,11 @@ shinyServer(function(input, output) {
       #   )
       # )
       
-      num_time_ranges <- length(values$my_table[input$my_table_rows_selected,]$time_start)
-      values$my_table[input$my_table_rows_selected,]$time_start[paste0("time_start_", num_time_ranges + 1)] <<- as.POSIXct(default_time_range[1])
-      values$my_table[input$my_table_rows_selected,]$time_end[paste0("time_end_", num_time_ranges + 1)] <<- as.POSIXct(default_time_range[2])
+      selected_phone <- values$my_table$phone[[input$my_table_rows_selected]]
+      
+      num_time_ranges <- length(values$my_table$time_start[[selected_phone]])
+      values$my_table$time_start[[selected_phone]][[paste0("time_start_", num_time_ranges + 1)]] <<- default_time_range[1]
+      values$my_table$time_end[[selected_phone]][[paste0("time_end_", num_time_ranges + 1)]] <<- default_time_range[2]
     }
   })
   
@@ -254,16 +256,16 @@ shinyServer(function(input, output) {
 
     if(is.null(input$my_table_rows_selected) == F) {
       
-      selected_row <- values$my_table[input$my_table_rows_selected,]
+      selected_phone <- values$my_table$phone[[input$my_table_rows_selected]]
       
-      time_ranges <- list(time_start = selected_row$time_start, time_end = selected_row$time_end)
+      time_ranges <- list(time_start = values$my_table$time_start[[selected_phone]], time_end = values$my_table$time_end[[selected_phone]])
       
       num_times <- length(time_ranges$time_start)
       
       sapply(1:num_times, function(i) {
         
-        values$my_table[input$my_table_rows_selected,]$time_start[[paste0("time_start_", i)]] <<- input[[paste0("time_range_", i)]][1]
-        values$my_table[input$my_table_rows_selected,]$time_end[[paste0("time_end_", i)]] <<- input[[paste0("time_range_", i)]][2]
+        values$my_table$time_start[[selected_phone]][[paste0("time_start_", i)]] <<- input[[paste0("time_range_", i)]][1]
+        values$my_table$time_end[[selected_phone]][[paste0("time_end_", i)]] <<- input[[paste0("time_range_", i)]][2]
       })
     }
   })
@@ -274,8 +276,9 @@ shinyServer(function(input, output) {
     
     if(is.null(input$my_table_rows_selected) == F) {
       
-      values$my_table[input$my_table_rows_selected,]$time_start <<- c(time_start_1 = as.POSIXct(default_time_range[1]))
-      values$my_table[input$my_table_rows_selected,]$time_end <<- c(time_end_1 = as.POSIXct(default_time_range[2]))
+      selected_phone <- values$my_table$phone[[input$my_table_rows_selected]]
+      values$my_table$time_start[[selected_phone]] <<- c(time_start_1 = default_time_range[1])
+      values$my_table$time_end[[selected_phone]] <<- c(time_end_1 = default_time_range[2])
     }
   })
   
@@ -338,21 +341,26 @@ shinyServer(function(input, output) {
     temp_table <- values$my_table
     
     temp_table$time_start <- lapply(temp_table$time_start, function(x) {
-      lapply(x, format.POSIXct, format="%I:%M %p", tz="America/New_York")
+      lapply(x, format, format="%I:%M %p", tz="America/New_York")
     })
     
     temp_table$time_end <- lapply(temp_table$time_end, function(x) {
-      lapply(x, format.POSIXct, format="%I:%M %p", tz="America/New_York")
+      lapply(x, format, format="%I:%M %p", tz="America/New_York")
     })
     
-    return(as.data.frame(temp_table))
+    temp_table$scheduled_sms <- lapply(temp_table$scheduled_sms, function(x) {
+      format(x, format="%a %b %d %Y %I:%M %p", tz="America/New_York")
+    })
     
-    if(nrow(temp_table) > 0) {
-      datatable(temp_table %>%
-        mutate(
-          scheduled_sms = format(scheduled_sms, "%a %b %d %Y %I:%M %p", tz = "America/New_York"),
-          frequency = paste0(as.character(frequency), " minutes")
-        ),
+    temp_table$frequency <- lapply(temp_table$frequency, function(x) {
+      paste0(as.character(x), " minutes")
+    })
+    
+    #return(as.data.frame(temp_table))
+    
+    if(length(temp_table$email) > 0) {
+      datatable(
+        as.data.frame.list(temp_table),
         rownames = F,
         selection = "single"
       )
