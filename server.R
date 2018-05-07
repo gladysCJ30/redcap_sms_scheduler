@@ -9,7 +9,7 @@ values <<- reactiveValues(status = "Send a message", twilio_phone = "7866193595"
 values$get_participants <<- 0
 time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
 default_time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
-start_date <<- Sys.Date()
+start_date <<- "2018-04-18"
 week_range <<- 0
 
 # Anything that calls autoInvalidate will automatically invalidate
@@ -58,7 +58,7 @@ observeEvent(autoInvalidate(), {
 
 observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
   
-  week_number <- (-1 * GetWeekNumber("2018-04-18") - 1) + GetWeekNumber(Sys.Date())
+  week_number <- (-1 * GetWeekNumber(start_date) - 1) + GetWeekNumber(Sys.Date())
   
   source("get_participant_list.R")
   
@@ -110,6 +110,10 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
 
 
 shinyServer(function(input, output, session) {
+  
+  observeEvent(input$debugging, {
+    browser()
+  })
   
   output$general_ui <- renderUI({
     div(
@@ -233,15 +237,12 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  observeEvent(input$debugging, {
-    browser()
-  })
-  
   observeEvent({
     input$start_date
   }, ignoreInit = T, {
     
     start_date <<- input$start_date
+    values$get_participants <<- values$get_participants + 1
   })
   
   observeEvent({
@@ -252,16 +253,8 @@ shinyServer(function(input, output, session) {
   })
 
   observeEvent({
-    input$time_range
-  }, {
-    time_range <<- input$time_range
-  })
-
-  observeEvent({
     input$schedule_sms
   }, ignoreInit = T, {
-    
-    
 
     if(isTruthy(input$my_table_rows_selected)) {
       
@@ -299,7 +292,7 @@ shinyServer(function(input, output, session) {
       updateTextInput(session, "sms_body", value = "")
       updateNumericInput(session, "sms_quantity", value = 0)
       updateNumericInput(session, "sms_frequency", value = 30)
-      updateCheckboxInput(session, "weekdays_input", value = c())
+      updateCheckboxInput(session, "weekdays_input", value = character(0))
     }
       
   })
