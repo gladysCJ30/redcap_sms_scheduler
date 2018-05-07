@@ -101,22 +101,22 @@ api_token <- "09C6537FF5EAFE92BD74E1AA1B9BEF67"#"F66E35FDC22C3BE97BD3C5FCE0F5201
 #setwd("D:/CCF BI Projects/SSIS Projects/SSIS - ETL Clinic DW Project")
 
 #file_name <- paste(getwd(), paste("ccf_programs_",gsub("[[:punct:][:space:]]","",Sys.time()),".csv",sep=""), sep="/")
-setwd("~/")
-file_name <- paste(getwd(), paste("ccf_programs_participant_list.csv",sep=""), sep="/")
+#setwd("~/")
+file_name <- "~/ccf_programs_participant_list.csv"
 
 # Function calls
 #redcapExportRecords(file_name,api_url,api_token,'csv','flat')
 
-redcapExportReport(api_url,api_token, paste(getwd(), "phone_number_list.csv", sep="/"))
+redcapExportReport(api_url,api_token, "~/phone_number_list.csv")
 
-contact_list <<- read.csv("phone_number_list.csv", stringsAsFactors = F)
+contact_list <<- read.csv("~/phone_number_list.csv", stringsAsFactors = F)
 
 #participant_list <<- read.csv("ccf_programs_participant_list.csv", stringsAsFactors = F)
 
 #participant_list <<- participant_list[!is.na(participant_list$phone) & !is.na(participant_list$survey_link),]
 
 randomization <<- read.csv(
-  file = paste(getwd(), "random.csv", sep = "/"),
+  file = "~/random.csv",
   stringsAsFactors=FALSE,
   na.strings=''
 )
