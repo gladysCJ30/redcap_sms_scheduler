@@ -30,14 +30,14 @@ observeEvent(autoInvalidate(), {
       # remove the phone number from the sms-todo list if the scheduled sms delivery time has not arrived yet
       if(values$my_table$scheduled_sms[[todo_sms]] > Sys.time()) {
 
-        remove_from_todo <<- c(remove_from_todo, todo_i)
+        remove_from_todo <<- c(remove_from_todo, todo_mail[[todo_i]])
       }
     })
   
-    todo_mail <<- todo_mail[!remove_from_todo]
+    todo_mail <<- todo_mail[!(todo_mail %in% remove_from_todo)]
   
     if(length(todo_mail) > 0) {
-      for(recipient in row.names(todo_mail)) {
+      for(recipient in todo_mail) {
         
         values$my_table$quantity[[recipient]] <<- values$my_table$quantity[[recipient]] - 1
         values$my_table <<- GetNextScheduleTime(values$my_table, recipient)
@@ -48,9 +48,9 @@ observeEvent(autoInvalidate(), {
     }
   
     #30 seconds before next text is due, refresh the survey links in the table
-    new_surveys <- values$my_table[values$my_table$quantity > 0 & lapply(values$my_table$scheduled_sms, function(x) {x - 30 <= Sys.time()}) ,]#- 30 <= Sys.time(),]
+    new_surveys <- lapply(names(values$my_table$quantity[values$my_table$quantity > 0]), function(x) {values$my_table$scheduled_sms[[x]] - 30 <= Sys.time()})
   
-    if(nrow(new_surveys) > 0) {
+    if(T %in% new_surveys) {
       values$get_participants <<- values$get_participants + 1
     }
   }
@@ -86,8 +86,8 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
       
       if(this_phone %in% values$my_table$phone) {
         
-        values$my_table[values$my_table$phone == this_phone,]$survey_link <<- survey_link
-        values$my_table[values$my_table$phone == this_phone,]$instrument <<- instrument
+        values$my_table$survey_link[[this_phone]] <<- survey_link
+        values$my_table$instrument[[this_phone]] <<- instrument
       }
       
       else {
@@ -109,7 +109,7 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
 })
 
 
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
   
   output$general_ui <- renderUI({
     div(
@@ -282,9 +282,26 @@ shinyServer(function(input, output) {
   
   observeEvent({
     input$my_table_rows_selected
-  }, ignoreInit = T, {
+  }, ignoreInit = T, ignoreNULL = F, {
     
-    #TODO update inputs when a row is selected on the table
+    if(!is.null(input$my_table_rows_selected) && input$my_table_rows_selected > 0) {
+      
+      selected_phone <- values$my_table$phone[[input$my_table_rows_selected]]
+      
+      updateTextInput(session, "sms_body", value = values$my_table$sms_body[[selected_phone]])
+      updateNumericInput(session, "sms_quantity", value = values$my_table$quantity[[selected_phone]])
+      updateNumericInput(session, "sms_frequency", value = values$my_table$frequency[[selected_phone]])
+      updateCheckboxInput(session, "weekdays_input", value = strsplit(values$my_table$days[[selected_phone]], ", ")[[1]])
+    }
+    
+    else {
+      
+      updateTextInput(session, "sms_body", value = "")
+      updateNumericInput(session, "sms_quantity", value = 0)
+      updateNumericInput(session, "sms_frequency", value = 30)
+      updateCheckboxInput(session, "weekdays_input", value = c())
+    }
+      
   })
 
   output$my_table <- DT::renderDataTable({
