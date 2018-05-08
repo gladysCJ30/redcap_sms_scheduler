@@ -46,7 +46,7 @@ observeEvent(autoInvalidate(), {
         values$my_table$quantity[[recipient]] <<- values$my_table$quantity[[recipient]] - 1
         values$my_table <<- GetNextScheduleTime(values$my_table, recipient)
   
-        tw_send_message(from = values$twilio_phone, to = 3057930763,#values$my_table$phone[[recipient]],
+        tw_send_message(from = values$twilio_phone, to = values$my_table$phone[[recipient]],
                         body = paste(as.character(values$my_table$sms_body[[recipient]]), as.character(values$my_table$survey_link[[recipient]])))
       }
     }
