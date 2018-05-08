@@ -48,13 +48,13 @@ GetNextScheduleTime <- function(my_table, recipient) {
     start_time <- diff_times[[2]]
     end_time <- diff_times[[3]]
     
-    if( currently_scheduled_time > end_time || length(grep(format(my_table$scheduled_sms[[recipient]] + (my_table$frequency[[recipient]] * 60), "%A", tz = "America/New_York"), my_table$days[[recipient]])) == 0 ) {
+    if( currently_scheduled_time > end_time || length(grep(format(my_table$scheduled_sms[[recipient]] + (my_table$frequency[[recipient]] * 60), "%A", tz = "America/New_York"), my_table$days[[recipient]][[paste0("weekdays_", time_i)]])) == 0 ) {
 
       #Find the next weekday that a message should be sent
       #86400 is the number of seconds in a day
       for(i in 1:7) {
 
-        if(length(grep(format(my_table$scheduled_sms[[recipient]] + (86400 * i), "%A", tz = "America/New_York"), my_table$days[[recipient]])) == 1) {
+        if(length(grep(format(my_table$scheduled_sms[[recipient]] + (86400 * i), "%A", tz = "America/New_York"), my_table$days[[recipient]][[paste0("weekdays_", time_i)]])) == 1) {
 
           temp_scheduled_time <<- strptime(paste0(as.character(format(my_table$scheduled_sms[[recipient]] + (86400 * i), format = "%a %b %d %Y ", tz = "America/New_York")), format(my_table$time_start[[recipient]][[paste0("time_start_", time_i)]], format = "%I:%M %p", tz = "America/New_York")), format = "%a %b %d %Y %I:%M %p")
           break

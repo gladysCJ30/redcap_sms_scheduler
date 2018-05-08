@@ -72,7 +72,7 @@ redcapExportReport <- function(api_url, api_token, file_name) {
     , token=api_token
     , content='report'
     , format='csv'
-    , report_id= 4
+    , report_id= 1865#4
     # RCurl options
     ,.opts=curlOptions(ssl.verifyhost=2)
   )

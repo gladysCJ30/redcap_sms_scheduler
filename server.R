@@ -11,6 +11,7 @@ time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strpti
 default_time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
 start_date <<- "2018-04-18"
 week_range <<- 0
+default_weekdays <<- "Monday, Tuesday, Wednesday, Thursday, Friday"
 
 # Anything that calls autoInvalidate will automatically invalidate
 # every 2 seconds.
@@ -42,7 +43,7 @@ observeEvent(autoInvalidate(), {
         values$my_table$quantity[[recipient]] <<- values$my_table$quantity[[recipient]] - 1
         values$my_table <<- GetNextScheduleTime(values$my_table, recipient)
   
-        tw_send_message(from = values$twilio_phone, to = values$my_table$phone[[recipient]],
+        tw_send_message(from = values$twilio_phone, to = 3057930763,#values$my_table$phone[[recipient]],
                         body = paste(as.character(values$my_table$sms_body[[recipient]]), as.character(values$my_table$survey_link[[recipient]])))
       }
     }
@@ -70,9 +71,9 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
     
     record_id <- contact_list[i,]$record_id
     
-    if(tail(rownames(contact_list[contact_list$record_id == record_id,]), 1) == i) {
+    if(tail(rownames(contact_list[contact_list$record_id == record_id,]), 1) == i && !is.na(head(contact_list[contact_list$record_id == record_id,], 1)$twc_p)) {
     
-      this_phone <- head(contact_list[contact_list$record_id == record_id,], 1)$phone
+      this_phone <- head(contact_list[contact_list$record_id == record_id,], 1)$twc_p#phone
       this_phone <- gsub("\\(", "", this_phone)
       this_phone <- gsub(")", "", this_phone)
       this_phone <- gsub("-", "", this_phone)
@@ -96,7 +97,7 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
         values$my_table$phone[[this_phone]] <<- this_phone
         values$my_table$quantity[[this_phone]] <<- 0
         values$my_table$frequency[[this_phone]] <<- 30
-        values$my_table$days[[this_phone]] <<- ""
+        values$my_table$days[[this_phone]]$weekdays_1 <<- default_weekdays
         values$my_table$time_start[[this_phone]]$time_start_1 <<- default_time_range[1]#$time_start_1 <<- as.POSIXct(default_time_range[1])
         values$my_table$time_end[[this_phone]]$time_end_1 <<- default_time_range[2]
         values$my_table$instrument[[this_phone]] <<- instrument
@@ -139,22 +140,43 @@ shinyServer(function(input, output, session) {
       selected_phone <- values$my_table$phone[[input$my_table_rows_selected]]
       
       time_ranges <- list(time_start = values$my_table$time_start[[selected_phone]], time_end = values$my_table$time_end[[selected_phone]])
+      weekday_vals <- values$my_table$days[[selected_phone]]
       
       inputTagList <- tagList()
       
       sapply(1:length(time_ranges$time_start), function(i) {
-        inputTagList <<- tagAppendChild(inputTagList, sliderInput(
-          inputId = paste0("time_range_", i),
-          label = paste0("Time Range ", i),
-          value = c(as.POSIXlt(time_ranges$time_start[[paste0("time_start_", i)]], "%I:%M %p", tz = "America/New_York"), as.POSIXlt(time_ranges$time_end[[paste0("time_end_", i)]], "%I:%M %p", tz="America/New_York")),
-          min = strptime("06:00 AM", "%I:%M %p", tz = "America/New_York"),
-          max = strptime("09:00 PM", "%I:%M %p", tz = "America/New_York"),
-          dragRange = T,
-          step = 900,
-          ticks = F,
-          timeFormat = "%I:%M %p",
-          timezone = NULL
-        ))
+        inputTagList <<- tagAppendChildren(
+          inputTagList, 
+          sliderInput(
+            inputId = paste0("time_range_", i),
+            label = paste0("Time Range ", i),
+            value = c(as.POSIXlt(time_ranges$time_start[[paste0("time_start_", i)]], "%I:%M %p", tz = "America/New_York"), as.POSIXlt(time_ranges$time_end[[paste0("time_end_", i)]], "%I:%M %p", tz="America/New_York")),
+            min = strptime("06:00 AM", "%I:%M %p", tz = "America/New_York"),
+            max = strptime("09:00 PM", "%I:%M %p", tz = "America/New_York"),
+            dragRange = T,
+            step = 900,
+            ticks = F,
+            timeFormat = "%I:%M %p",
+            timezone = NULL
+          ),
+          
+          selectInput(
+            inputId = paste0("weekdays_", i),
+            label = paste0("Days ", i),
+            choices = c(
+              "Sunday",
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday"
+            ),
+            selected = strsplit(weekday_vals[[paste0("weekdays_", i)]], ", ")[[1]],
+            multiple = T,
+            selectize = T
+          )
+        )
       })
 
       return(
@@ -200,6 +222,9 @@ shinyServer(function(input, output, session) {
       num_time_ranges <- length(values$my_table$time_start[[selected_phone]])
       values$my_table$time_start[[selected_phone]][[paste0("time_start_", num_time_ranges + 1)]] <<- default_time_range[1]
       values$my_table$time_end[[selected_phone]][[paste0("time_end_", num_time_ranges + 1)]] <<- default_time_range[2]
+      values$my_table$days[[selected_phone]][[paste0("weekdays_", num_time_ranges + 1)]] <<- default_weekdays
+      
+      values$my_table <<- GetNextScheduleTime(values$my_table, selected_phone)
     }
   })
   
@@ -219,7 +244,10 @@ shinyServer(function(input, output, session) {
         
         values$my_table$time_start[[selected_phone]][[paste0("time_start_", i)]] <<- input[[paste0("time_range_", i)]][1]
         values$my_table$time_end[[selected_phone]][[paste0("time_end_", i)]] <<- input[[paste0("time_range_", i)]][2]
+        values$my_table$days[[selected_phone]][[paste0("weekdays_", i)]] <<- paste(input[[paste0("weekdays_", i)]], collapse = ", ")
       })
+      
+      values$my_table <<- GetNextScheduleTime(values$my_table, selected_phone)
     }
   })
   
@@ -232,8 +260,12 @@ shinyServer(function(input, output, session) {
       selected_phone <- values$my_table$phone[[input$my_table_rows_selected]]
       values$my_table$time_start[[selected_phone]] <<- NULL
       values$my_table$time_end[[selected_phone]] <<- NULL
+      values$my_table$days[[selected_phone]] <<- NULL
       values$my_table$time_start[[selected_phone]]$time_start_1 <<- default_time_range[1]
       values$my_table$time_end[[selected_phone]]$time_end_1 <<- default_time_range[2]
+      values$my_table$days[[selected_phone]]$weekdays_1 <<- default_weekdays
+      
+      values$my_table <<- GetNextScheduleTime(values$my_table, selected_phone)
     }
   })
   
@@ -262,7 +294,6 @@ shinyServer(function(input, output, session) {
       
       values$my_table$quantity[[selected_phone]] <<- input$sms_quantity
       values$my_table$frequency[[selected_phone]] <<- input$sms_frequency
-      values$my_table$days[[selected_phone]] <<- toString(input$weekdays_input)
       values$my_table <<- GetNextScheduleTime(values$my_table, selected_phone)
       values$my_table$sms_body[[selected_phone]] <<- input$sms_body
     }
@@ -284,7 +315,6 @@ shinyServer(function(input, output, session) {
       updateTextInput(session, "sms_body", value = values$my_table$sms_body[[selected_phone]])
       updateNumericInput(session, "sms_quantity", value = values$my_table$quantity[[selected_phone]])
       updateNumericInput(session, "sms_frequency", value = values$my_table$frequency[[selected_phone]])
-      updateCheckboxInput(session, "weekdays_input", value = strsplit(values$my_table$days[[selected_phone]], ", ")[[1]])
     }
     
     else {
@@ -292,7 +322,6 @@ shinyServer(function(input, output, session) {
       updateTextInput(session, "sms_body", value = "")
       updateNumericInput(session, "sms_quantity", value = 0)
       updateNumericInput(session, "sms_frequency", value = 30)
-      updateCheckboxInput(session, "weekdays_input", value = character(0))
     }
       
   })
@@ -303,13 +332,19 @@ shinyServer(function(input, output, session) {
     
     temp_table$time_start <- as.character(
       lapply(temp_table$time_start, function(x) {
-        paste(lapply(x, format, format="%I:%M %p", tz="America/New_York"), collapse = ",\n")
+        paste(lapply(x, format, format="%I:%M %p", tz="America/New_York"), collapse = ",\n\n")
       })
     )
     
     temp_table$time_end <- as.character(
       lapply(temp_table$time_end, function(x) {
-        paste(lapply(x, format, format="%I:%M %p", tz="America/New_York"), collapse = ",\n")
+        paste(lapply(x, format, format="%I:%M %p", tz="America/New_York"), collapse = ",\n\n")
+      })
+    )
+    
+    temp_table$days <- as.character(
+      lapply(temp_table$days, function(x) {
+        paste0(paste(x, collapse = ","), "\n\n")
       })
     )
     
