@@ -5,13 +5,16 @@ library(DT)
 library(dplyr)
 library(RCurl)
 
-values <<- reactiveValues(status = "Send a message", twilio_phone = "7866193595", mydb = NULL)
-values$get_participants <<- 0
-time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
-default_time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
-start_date <<- "2018-04-18"
-week_range <<- 0
-default_weekdays <<- "Monday, Tuesday, Wednesday, Thursday, Friday"
+
+if(exists("values") == F) {
+  values <<- reactiveValues(status = "Send a message", twilio_phone = "7866193595", mydb = NULL)
+  values$get_participants <<- 0
+  time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
+  default_time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
+  start_date <<- "2018-04-18"
+  week_range <<- 0
+  default_weekdays <<- "Monday, Tuesday, Wednesday, Thursday, Friday"
+}
 
 # Anything that calls autoInvalidate will automatically invalidate
 # every 2 seconds.
@@ -54,6 +57,12 @@ observeEvent(autoInvalidate(), {
     if(T %in% new_surveys) {
       values$get_participants <<- values$get_participants + 1
     }
+  }
+  
+  if(.Platform$OS.type == "windows") {
+    save.image()
+  } else {
+    save.image(file = "~/.Rdata") 
   }
 })
 
@@ -111,6 +120,17 @@ observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
 
 
 shinyServer(function(input, output, session) {
+  
+  output$debugging_ui <- renderUI({
+    
+    if(.Platform$OS.type == "windows") {
+      actionButton("debugging", "Debug")
+    }
+    
+    else {
+      div()
+    }
+  })
   
   observeEvent(input$debugging, {
     browser()

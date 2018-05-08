@@ -19,7 +19,7 @@ shinyUI(
       
       sidebarPanel(
         
-        actionButton("debugging", "Debug"),
+        uiOutput("debugging_ui"),
         
         tabsetPanel(
           

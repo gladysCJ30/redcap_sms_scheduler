@@ -4,6 +4,16 @@ options("stringsAsFactors" = FALSE, shiny.trace = T)
 
 source("configuration.R")
 
+if(.Platform$OS.type == "windows") {
+  if(file_test("-f", ".RData")) {
+    load(".RData")
+  }
+} else {
+  if(file_test("-f", "~/.RData")) {
+    readRDS("~/.RData")
+  }
+}
+
 ##
 # Gets the next available time to schedule a sms message.
 # INPUT: the schedule dataframe, the row id
