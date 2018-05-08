@@ -62,7 +62,7 @@ observeEvent(autoInvalidate(), {
   if(.Platform$OS.type == "windows") {
     save.image()
   } else {
-    save.image(file = "~/.Rdata") 
+    save.image(file = "~/.RData") 
   }
 })
 
