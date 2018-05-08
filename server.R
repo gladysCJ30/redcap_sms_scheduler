@@ -11,7 +11,7 @@ if(exists("values") == F) {
   values$get_participants <<- 0
   time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
   default_time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
-  start_date <<- "2018-04-18"
+  start_date <<- "2018-05-06"
   week_range <<- 0
   default_weekdays <<- "Monday, Tuesday, Wednesday, Thursday, Friday"
 }
@@ -68,8 +68,8 @@ observeEvent(autoInvalidate(), {
 
 observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
   
-  week_number <- (-1 * GetWeekNumber(start_date) - 1) + GetWeekNumber(Sys.Date())
-  
+  week_number <- (-1 * GetWeekNumber(start_date) + 1) + GetWeekNumber(Sys.Date()) 
+
   source("get_participant_list.R")
   
   lscb_records <<- redcapExportRecords(api_url, api_token, "lscb_parent", paste0("week_", week_number, "_arm_1"))
@@ -142,14 +142,14 @@ shinyServer(function(input, output, session) {
         "start_date",
         "Start Date",
         value = start_date
-      ),
+      )#,
       
-      numericInput(
-        "week_range",
-        label = "Week Range",
-        value = week_range,
-        min = 0
-      )
+      #numericInput(
+      #  "week_range",
+      #  label = "Week Range",
+      #  value = week_range,
+      #  min = 0
+      #)
     )
   })
   
@@ -364,7 +364,8 @@ shinyServer(function(input, output, session) {
     
     temp_table$days <- as.character(
       lapply(temp_table$days, function(x) {
-        paste0(paste(x, collapse = ","), "\n\n")
+        paste0(paste(x, collapse = ","), "
+               \n")
       })
     )
     
