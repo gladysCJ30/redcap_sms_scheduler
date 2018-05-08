@@ -88,10 +88,11 @@ redcapExportReport <- function(api_url, api_token, file_name) {
 }
 
 # Config: URL
-api_url <- 'https://redcapdev.fiu.edu/api/'
+#api_url <- 'https://redcapdev.fiu.edu/api/'
 
 # Config: Tokens for each database
-api_token <- "09C6537FF5EAFE92BD74E1AA1B9BEF67"#"F66E35FDC22C3BE97BD3C5FCE0F5201E" #CCF Programs Database
+#api_token <- "F66E35FDC22C3BE97BD3C5FCE0F5201E" #CCF Programs Database
+#api_token <- "09C6537FF5EAFE92BD74E1AA1B9BEF67"
 
 # Set the working directory
 #setwd("D:/dev/CCF/redcap_sms_scheduler/")
