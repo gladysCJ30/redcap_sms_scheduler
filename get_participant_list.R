@@ -18,9 +18,6 @@
 #
 ###############################################################################
 
-instruments <- c("lscb_parent", "bcb_parent", "ccb_parent")
-events <- c("week_1_arm_1", "week_2_arm_1", "week_3_arm_1")
-
 # Load libraries
 library(RCurl)
 
@@ -102,22 +99,26 @@ api_token <- "09C6537FF5EAFE92BD74E1AA1B9BEF67"#"F66E35FDC22C3BE97BD3C5FCE0F5201
 
 #file_name <- paste(getwd(), paste("ccf_programs_",gsub("[[:punct:][:space:]]","",Sys.time()),".csv",sep=""), sep="/")
 #setwd("~/")
-file_name <- "~/ccf_programs_participant_list.csv"
 
-# Function calls
-#redcapExportRecords(file_name,api_url,api_token,'csv','flat')
-
-redcapExportReport(api_url,api_token, "~/phone_number_list.csv")
-
-contact_list <<- read.csv("~/phone_number_list.csv", stringsAsFactors = F)
-
-#participant_list <<- read.csv("ccf_programs_participant_list.csv", stringsAsFactors = F)
-
-#participant_list <<- participant_list[!is.na(participant_list$phone) & !is.na(participant_list$survey_link),]
-
-randomization <<- read.csv(
-  file = "~/random.csv",
-  stringsAsFactors=FALSE,
-  na.strings=''
-)
-
+if(.Platform$OS.type == "windows") {
+  
+  file_name <- "ccf_programs_participant_list.csv"
+  redcapExportReport(api_url,api_token, "phone_number_list.csv")
+  contact_list <<- read.csv("phone_number_list.csv", stringsAsFactors = F)
+  randomization <<- read.csv(
+    file = "random.csv",
+    stringsAsFactors=FALSE,
+    na.strings=''
+  )
+  
+} else {  #UNIX
+  
+  file_name <- "~/ccf_programs_participant_list.csv"
+  redcapExportReport(api_url,api_token, "~/phone_number_list.csv")
+  contact_list <<- read.csv("~/phone_number_list.csv", stringsAsFactors = F)
+  randomization <<- read.csv(
+    file = "~/random.csv",
+    stringsAsFactors=FALSE,
+    na.strings=''
+  )
+}
