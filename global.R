@@ -10,7 +10,7 @@ if(.Platform$OS.type == "windows") {
   }
 } else {
   if(file_test("-f", "~/.RData")) {
-    readRDS("~/.RData")
+    load("~/.RData")
   }
 }
 
