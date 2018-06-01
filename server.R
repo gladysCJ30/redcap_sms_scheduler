@@ -168,8 +168,8 @@ shinyServer(function(input, output, session) {
       
       inputTagList <- tagList()
       
-      sapply(1:length(time_ranges$time_start), function(i) {
-        inputTagList <<- tagAppendChildren(
+      for(i in 1:length(time_ranges$time_start)) {
+        inputTagList <- tagAppendChildren(
           inputTagList, 
           sliderInput(
             inputId = paste0("time_range_", i),
