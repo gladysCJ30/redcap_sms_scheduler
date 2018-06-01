@@ -7,11 +7,11 @@ library(RCurl)
 
 
 if(exists("values") == F) {
-  values <<- reactiveValues(status = "Send a message", twilio_phone = "7866193595", mydb = NULL)
+  values <<- reactiveValues(status = "Send a message", twilio_phone = "3059214214", mydb = NULL)
   values$get_participants <<- 0
   time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
   default_time_range <<- c(strptime("09:00 AM", "%I:%M %p", tz="America/New_York"), strptime("02:00 PM", "%I:%M %p", tz="America/New_York"))
-  start_date <<- "2018-05-06"
+  start_date <<- "2018-05-10"
   week_range <<- 0
   default_weekdays <<- "Monday, Tuesday, Wednesday, Thursday, Friday"
 }
@@ -22,23 +22,23 @@ autoInvalidate <- reactiveTimer(2000)
 
 observeEvent(autoInvalidate(), {
   
-  todo_mail <<- names(values$my_table$quantity[values$my_table$quantity > 0])
-  remove_from_todo <<- NULL
+  todo_mail <- names(values$my_table$quantity[values$my_table$quantity > 0])
+  remove_from_todo <- NULL
 
   if(!is.null(todo_mail) && length(todo_mail) > 0) {
     
-    lapply(1:length(todo_mail), function(todo_i) {
+    for(todo_i in 1:length(todo_mail)) {
       
       todo_sms <- todo_mail[[todo_i]]
       
       # remove the phone number from the sms-todo list if the scheduled sms delivery time has not arrived yet
       if(values$my_table$scheduled_sms[[todo_sms]] > Sys.time()) {
 
-        remove_from_todo <<- c(remove_from_todo, todo_mail[[todo_i]])
+        remove_from_todo <- c(remove_from_todo, todo_mail[[todo_i]])
       }
-    })
+    }
   
-    todo_mail <<- todo_mail[!(todo_mail %in% remove_from_todo)]
+    todo_mail <- todo_mail[!(todo_mail %in% remove_from_todo)]
   
     if(length(todo_mail) > 0) {
       for(recipient in todo_mail) {
@@ -60,15 +60,19 @@ observeEvent(autoInvalidate(), {
   }
   
   if(.Platform$OS.type == "windows") {
-    save.image()
+    #saveRDS(values$my_table, file = "sms_data_table.rds")
   } else {
-    save.image(file = "~/.RData") 
+    #saveRDS(values$my_table, file = "~/sms_data_table.rds") 
   }
 })
 
 observeEvent(values$get_participants, ignoreNULL = F, ignoreInit = F, {
   
-  week_number <- (-1 * GetWeekNumber(start_date) + 1) + GetWeekNumber(Sys.Date()) 
+  week_number <- (-1 * GetWeekNumber(start_date) + 1) + GetWeekNumber(Sys.Date())
+  
+  if(week_number < 1) {
+    week_number <- 1
+  }
 
   source("get_participant_list.R")
   
@@ -197,7 +201,7 @@ shinyServer(function(input, output, session) {
             selectize = T
           )
         )
-      })
+      }
 
       return(
         div(
